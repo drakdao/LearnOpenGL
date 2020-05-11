@@ -166,23 +166,26 @@ int main()
 
     std::cout << glGetString(GL_VERSION) << std::endl;
 
+    // 1. bind Vertex Array Object
     unsigned int vao;
     GLCall(glGenVertexArrays(1, &vao));
     GLCall(glBindVertexArray(vao));
 
+    // 2. copy our vertices array in a vertex buffer for OpenGL to use
     unsigned int buffer;
     GLCall(glGenBuffers(1, &buffer));
     GLCall(glBindBuffer(GL_ARRAY_BUFFER, buffer));
     GLCall(glBufferData(GL_ARRAY_BUFFER, 8 * sizeof(float), positions, GL_STATIC_DRAW));
 
-    GLCall(glEnableVertexAttribArray(0));
-    GLCall(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), 0));
-    GLCall(glBindBuffer(GL_ARRAY_BUFFER, 0));
-
+    // 3. copy our index array in a element buffer for OpenGL to use
     unsigned int ibo;
     GLCall(glGenBuffers(1, &ibo));
     GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo));
     GLCall(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(unsigned int), indices, GL_STATIC_DRAW));
+    
+    // 4. then set the vertex attributes pointers
+    GLCall(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), 0));
+    GLCall(glEnableVertexAttribArray(0));
 
     ShaderProgramSource source = ParseShader("res/shaders/Basic.shader");
     unsigned int shader = CreateShader(source.VertexSource, source.FragmentSource);
@@ -193,7 +196,6 @@ int main()
 
     float r = 0.0f;
     float increment = 0.05f;
-    
     
     // render loop
     // -----------
@@ -207,7 +209,6 @@ int main()
         // ------
         GLCall(glClearColor(0.2f, 0.3f, 0.3f, 1.0f));
         GLCall(glClear(GL_COLOR_BUFFER_BIT));
-        GLCall(glBindVertexArray(vao));
         
         GLCall(glUniform4f(location, r, 0.5f, 0.2f, 1.0f));
         GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr));
@@ -218,6 +219,7 @@ int main()
             increment = .05f;
 
         r += increment;
+
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
         glfwSwapBuffers(window);
