@@ -1,54 +1,15 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-
-#include <iostream>
-#include <fstream>
 #include <string>
-#include <sstream>
+#include <iostream>
 
 #include "stb_image.h"
 #include "Renderer.h"
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
 #include "VertexArray.h"
+#include "Shader_s.h"
 
-
-struct ShaderProgramSource
-{
-    std::string VertexSource;
-    std::string FragmentSource;
-};
-
-static ShaderProgramSource ParseShader(const std::string& filepath)
-{
-    std::ifstream stream(filepath);
-
-    enum class ShaderType
-    {
-        NONE = -1, VERTEX = 0, FRAGMENT = 1
-    };
-
-    std::string line;
-    std::stringstream ss[2];
-    ShaderType type = ShaderType::NONE;
-
-    while (getline(stream, line))
-    {
-        if (line.find("#shader") != std::string::npos)
-        {
-            if (line.find("vertex") != std::string::npos)
-                type = ShaderType::VERTEX;
-            else if (line.find("fragment") != std::string::npos)
-                type = ShaderType::FRAGMENT;
-        }
-        else
-        {
-            ss[(int)type] << line << '\n';
-        }
-    }
-
-    return { ss[0].str(), ss[1].str() };
-}
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
@@ -56,49 +17,6 @@ void processInput(GLFWwindow* window);
 // settings
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
-
-static unsigned int CompileShader(unsigned int type, const std::string& source)
-{
-    GLCall(unsigned int id = glCreateShader(type));
-    const char* src = source.c_str();
-    GLCall(glShaderSource(id, 1, &src, nullptr));
-    GLCall(glCompileShader(id));
-
-    int result;
-    glGetShaderiv(id, GL_COMPILE_STATUS, &result);
-    if (result == GL_FALSE)
-    {
-        int length;
-        glGetShaderiv(id, GL_INFO_LOG_LENGTH, &length);
-        char* message = new char[length];
-        glGetShaderInfoLog(id, length, &length, message);
-        std::cout << "Failed to compile "<<
-            (type == GL_VERTEX_SHADER ? "vertex" : "fragment") <<" shader!" 
-            << std::endl;
-        std::cout << message << std::endl;
-        GLCall(glDeleteShader(id));
-        return 0;
-    }
-
-    return id;
-}
-
-static unsigned int CreateShader(const std::string& vertexShader, const std::string& fragmentShader)
-{
-    unsigned int program = glCreateProgram();
-    unsigned int vs = CompileShader(GL_VERTEX_SHADER, vertexShader);
-    unsigned int fs = CompileShader(GL_FRAGMENT_SHADER, fragmentShader);
-
-    GLCall(glAttachShader(program, vs));
-    GLCall(glAttachShader(program, fs));
-    GLCall(glLinkProgram(program));
-    glValidateProgram(program);
-
-    GLCall(glDeleteShader(vs));
-    GLCall(glDeleteShader(fs));
-
-    return program;
-}
 
 int main()
 {
@@ -224,13 +142,12 @@ int main()
         }
         stbi_image_free(data);
 
-        ShaderProgramSource source = ParseShader("res/shaders/Basic.shader");
-        unsigned int shader = CreateShader(source.VertexSource, source.FragmentSource);
-        GLCall(glUseProgram(shader));
+        Shader shader("res/shaders/Basic.shader");
+        shader.Bind();
 
-        glUniform1i(glGetUniformLocation(shader, "texture1"), 0);
-        glUniform1i(glGetUniformLocation(shader, "texture2"), 1);
-
+        shader.SetUniform1i("texture1", 0);
+        shader.SetUniform1i("texture2", 1);
+        
         glActiveTexture(GL_TEXTURE0); // activate the texture unit first before binding texture
         glBindTexture(GL_TEXTURE_2D, texture1);
         glActiveTexture(GL_TEXTURE1);
@@ -256,9 +173,6 @@ int main()
             glfwSwapBuffers(window);
             glfwPollEvents();
         }
-
-        GLCall(glDeleteProgram(shader));
-
     }   
     // glfw: terminate, clearing all previously allocated GLFW resources.
     // ------------------------------------------------------------------

@@ -154,6 +154,7 @@
     <ClCompile Include="src\glad.c" />
     <ClCompile Include="src\IndexBuffer.cpp" />
     <ClCompile Include="src\Renderer.cpp" />
+    <ClCompile Include="src\Shader_s.cpp" />
     <ClCompile Include="src\stb_image.cpp" />
     <ClCompile Include="src\VertexArray.cpp" />
     <ClCompile Include="src\VertexBuffer.cpp" />
@@ -164,6 +165,7 @@
   <ItemGroup>
     <ClInclude Include="src\IndexBuffer.h" />
     <ClInclude Include="src\Renderer.h" />
+    <ClInclude Include="src\Shader_s.h" />
     <ClInclude Include="src\stb_image.h" />
     <ClInclude Include="src\VertexArray.h" />
     <ClInclude Include="src\VertexBuffer.h" />
