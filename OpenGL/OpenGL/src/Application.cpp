@@ -7,9 +7,11 @@
 #include <sstream>
 
 #include "stb_image.h"
+#include "Renderer.h"
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
-#include "Renderer.h"
+#include "VertexArray.h"
+
 
 struct ShaderProgramSource
 {
@@ -149,14 +151,12 @@ int main()
         std::cout << glGetString(GL_VERSION) << std::endl;
 
         // 1. bind Vertex Array Object
-        unsigned int vao;
-        GLCall(glGenVertexArrays(1, &vao));
-        GLCall(glBindVertexArray(vao));
-
+        VertexArray va;
+        VertexBufferLayout layout;
+        
         // 2. copy our vertices array in a vertex buffer for OpenGL to use
         VertexBuffer vb(vertices, 8 * 4 * sizeof(float));
         vb.Bind();
-
 
         // 3. copy our index array in a element buffer for OpenGL to use
         IndexBuffer ib(indices, 6);
@@ -164,14 +164,15 @@ int main()
 
         // 4. then set the vertex attributes pointers
         // position attribute
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-        glEnableVertexAttribArray(0);
+        layout.Push<float>(3);
         // color attribute
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-        glEnableVertexAttribArray(1);
+        layout.Push<float>(3);
         // texture attribute
-        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-        glEnableVertexAttribArray(2);
+        layout.Push<float>(2);
+        va.Bind();
+
+        // always do this after pushing to layout
+        va.AddBuffer(vb, layout);
 
         // load and create a texture 
         // -------------------------
@@ -256,9 +257,6 @@ int main()
             glfwPollEvents();
         }
 
-        GLCall(glDeleteVertexArrays(1, &vao));
-        //GLCall(glDeleteBuffers(1, &buffer));
-        //GLCall(glDeleteBuffers(1, &ibo));
         GLCall(glDeleteProgram(shader));
 
     }   
